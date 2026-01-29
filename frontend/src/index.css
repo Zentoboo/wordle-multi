@@ -22,8 +22,50 @@ html,
 
 #root {
   display: flex;
+  flex-direction: column;
+  font-size: 1.2rem;
+}
+
+.header {
+  height: 60px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links {
+  height: 100%;
+  display: flex;
+}
+
+.header-nav-link {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-top: none;
+  padding: 0 1rem;
+}
+
+.page {
+  flex: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  font-weight: bold;
 }
 
 .card {
@@ -33,11 +75,16 @@ html,
   border: 2px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  justify-content:space-evenly;
-  align-items:center;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 1.6rem;
 }
 
-.card h1 {
-  font-size: 1.6rem;
-  font-weight: bold;
+.home {
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
 }

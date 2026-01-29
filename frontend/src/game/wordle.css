@@ -1,0 +1,44 @@
+.wordle-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wordle-row {
+    display: flex;
+    gap: 2px;
+}
+
+.wordle-cell {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.6rem;
+    margin: 2px;
+    text-transform: uppercase;
+}
+
+.color-0 {
+    background: #3a3a3c;
+    color: white;
+}
+
+.color-1 {
+    background: #b59f3b;
+    color: white;
+}
+
+.color-2 {
+    background: #538d4e;
+    color: white;
+}
+
+input:disabled,
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
