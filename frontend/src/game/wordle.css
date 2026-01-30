@@ -10,8 +10,8 @@
 }
 
 .wordle-cell {
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
     border: 2px solid var(--color-border);
     display: flex;
     align-items: center;
@@ -41,4 +41,46 @@ input:disabled,
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.keyboard {
+    margin-top: 1rem;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+
+.keyboard-key {
+    margin: 2px;
+    padding: 10px 12px;
+    font-weight: bold;
+    border-radius: 0px;
+    border: none;
+    background: var(--color-border);
+    color: white;
+    cursor: pointer;
+}
+
+.keyboard-key:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.key-0 {
+    background: var(--color-border);
+}
+
+.key-1 {
+    background: #3a3a3c;
+}
+
+.key-2 {
+    background: #b59f3b;
+}
+
+.key-3 {
+    background: #538d4e;
 }

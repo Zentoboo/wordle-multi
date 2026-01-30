@@ -10,7 +10,7 @@ export default function Header() {
                 <div className="nav-links">
                     <Link className="header-nav-link" to="/">Home</Link>
                     <Link className="header-nav-link" to="/about">About</Link>
-                    <Link className="header-nav-link" to="/profile">Profile</Link>
+                    <Link className="header-nav-link" to="/profile">Profile</Link> {/* change it to login button when not signed in */}
                 </div>
             </nav>
         </header>
