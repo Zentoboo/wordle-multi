@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API_URL = "http://localhost:5159/api/auth";
+const API_URL = "/api/auth";
 
 export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
