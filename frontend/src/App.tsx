@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./contexts";
 import Layout from "./Layout";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -7,7 +8,7 @@ import Profile from "./pages/Profile";
 import Wordle from "./game/WordleLocal";
 import NotFound from "./pages/NotFound";
 
-function App() {
+function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
@@ -19,6 +20,14 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 

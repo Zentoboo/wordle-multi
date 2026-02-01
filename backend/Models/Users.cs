@@ -16,4 +16,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
 
     public bool EmailVerified { get; set; } = false;
+
+    // Navigation property for refresh tokens
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

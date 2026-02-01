@@ -1,3 +1,5 @@
+@import "fonts.css";
+
 :root {
   --color-bg: #2e2e2e;
   --color-text: #f1f1f1;
@@ -8,7 +10,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: jetbrains-mono, monospace;
   background-color: var(--color-bg);
   color: var(--color-text);
 }
@@ -89,9 +90,56 @@ h1 {
   justify-content: space-around;
 }
 
-input, button {
+input,
+button {
   width: 100%;
   margin: 0.4rem 0;
   padding: 0.8rem;
   font-size: 1.2rem;
+}
+
+.games-selection {
+  display: flex;
+  gap: 1.6rem;
+  justify-content: center;
+  align-items: stretch;
+  padding: 2rem;
+}
+
+.game-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 1.6rem;
+  min-width: 320px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.play-button {
+  margin-top: auto;
+  padding: 0.8rem 0.8rem;
+  background: #538d4e;
+  color: var(--color-text);
+  text-decoration: none;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.play-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 768px) {
+  .games-selection {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .game-card {
+    width: 90%;
+    max-width: 360px;
+  }
 }
