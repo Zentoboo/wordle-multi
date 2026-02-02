@@ -136,7 +136,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const res = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password,
+          rememberMe: credentials.rememberMe || false
+        })
       });
 
       const data = await res.text();
@@ -184,7 +188,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const res = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+        body: JSON.stringify({
+          username: userData.username,
+          email: userData.email,
+          password: userData.password,
+          rememberMe: userData.rememberMe || false
+        })
       });
 
       const data = await res.text();

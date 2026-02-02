@@ -7,7 +7,7 @@ namespace AuthApi.Services;
 public interface IRefreshTokenService
 {
     Task<RefreshToken?> GetRefreshTokenAsync(string token);
-    Task<RefreshToken> CreateRefreshTokenAsync(User user, string token);
+    Task<RefreshToken> CreateRefreshTokenAsync(User user, string token, bool rememberMe = false);
     Task RevokeRefreshTokenAsync(RefreshToken refreshToken, string? newToken = null);
     Task RevokeAllUserRefreshTokensAsync(User user);
     Task CleanupExpiredTokensAsync();
@@ -34,7 +34,7 @@ public class RefreshTokenService : IRefreshTokenService
             .FirstOrDefaultAsync(rt => rt.Token == token);
     }
 
-    public async Task<RefreshToken> CreateRefreshTokenAsync(User user, string token)
+    public async Task<RefreshToken> CreateRefreshTokenAsync(User user, string token, bool rememberMe = false)
     {
         // Revoke existing refresh tokens for this user
         await RevokeAllUserRefreshTokensAsync(user);
@@ -43,7 +43,7 @@ public class RefreshTokenService : IRefreshTokenService
         {
             UserId = user.Id,
             Token = token,
-            ExpiresAt = _tokenService.GetRefreshTokenExpiration(),
+            ExpiresAt = _tokenService.GetRefreshTokenExpiration(rememberMe),
             CreatedAt = DateTime.UtcNow,
             IsUsed = false,
             IsRevoked = false

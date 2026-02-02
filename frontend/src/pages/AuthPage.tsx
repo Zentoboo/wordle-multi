@@ -11,6 +11,7 @@ export default function AuthPage() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const [errors, setErrors] = useState<ValidationError[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -19,9 +20,9 @@ export default function AuthPage() {
         setIsSubmitting(true);
 
         try {
-            const validationErrors = isLogin 
-                ? await login({ username, password })
-                : await register({ username, email, password });
+            const validationErrors = isLogin
+                ? await login({ username, password, rememberMe })
+                : await register({ username, email, password, rememberMe });
 
             if (validationErrors.length === 0) {
                 // Success - redirect to home or profile
@@ -51,6 +52,7 @@ export default function AuthPage() {
         setUsername("");
         setEmail("");
         setPassword("");
+        setRememberMe(false);
     };
 
     if (isLoading) {
@@ -61,14 +63,14 @@ export default function AuthPage() {
         <div>
             <div>
                 <h2>{isLogin ? "Login" : "Register"}</h2>
-                
+
                 {/* Format Instructions */}
                 <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#666' }}>
                     <strong>Format Requirements:</strong>
                     <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
                         <li>Username: 3-20 characters, letters, numbers, underscores only</li>
                         {!isLogin && <li>Email: Valid email address (e.g., user@example.com)</li>}
-                        <li>Password: 6-50 characters</li>
+                        <li>Password: 8 characters with uppercase, lowercase, number, and special character</li>
                     </ul>
                 </div>
 
@@ -130,6 +132,45 @@ export default function AuthPage() {
                             {getFieldError('general')}
                         </div>
                     )}
+
+                    <div style={{ margin: '1rem 0', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                disabled={isSubmitting}
+                                style={{ width: 'auto', margin: '0 0.8rem' }}
+                            />
+
+                            <label
+                                htmlFor="rememberMe"
+                                style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    width: '200%'
+                                }}
+                            >
+                                Remember me
+                            </label>
+                        </div>
+
+                        {rememberMe && (
+                            <div
+                                style={{
+                                    fontSize: '0.8rem',
+                                    color: '#666',
+                                    margin: '0 0.8rem',
+                                }}
+                            >
+                                Keep me logged in for 30 days on this device
+                            </div>
+                        )}
+                    </div>
+
+
 
                     <div>
                         <button type="submit" disabled={isSubmitting}>

@@ -60,12 +60,12 @@ public class AuthController : ControllerBase
         // Generate tokens for automatic login after registration
         var accessToken = _tokenService.CreateAccessToken(user);
         var refreshTokenString = _tokenService.CreateRefreshToken();
-        var refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(user, refreshTokenString);
+        var refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(user, refreshTokenString, dto.RememberMe);
 
         var response = new AuthenticationResponse(
             AccessToken: accessToken,
             RefreshToken: refreshToken.Token,
-            AccessTokenExpiresAt: DateTime.UtcNow.AddMinutes(15),
+            AccessTokenExpiresAt: DateTime.UtcNow.AddHours(4),
             RefreshTokenExpiresAt: refreshToken.ExpiresAt,
             User: new UserResponse(user.Id, user.Username, user.Email)
         );
@@ -97,12 +97,12 @@ public class AuthController : ControllerBase
 
         var accessToken = _tokenService.CreateAccessToken(user);
         var refreshTokenString = _tokenService.CreateRefreshToken();
-        var refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(user, refreshTokenString);
+        var refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(user, refreshTokenString, dto.RememberMe);
 
         var response = new AuthenticationResponse(
             AccessToken: accessToken,
             RefreshToken: refreshToken.Token,
-            AccessTokenExpiresAt: DateTime.UtcNow.AddMinutes(15),
+            AccessTokenExpiresAt: DateTime.UtcNow.AddHours(4),
             RefreshTokenExpiresAt: refreshToken.ExpiresAt,
             User: new UserResponse(user.Id, user.Username, user.Email)
         );
@@ -148,7 +148,7 @@ public class AuthController : ControllerBase
         var response = new AuthenticationResponse(
             AccessToken: accessToken,
             RefreshToken: newRefreshToken.Token,
-            AccessTokenExpiresAt: DateTime.UtcNow.AddMinutes(15),
+            AccessTokenExpiresAt: DateTime.UtcNow.AddHours(4),
             RefreshTokenExpiresAt: newRefreshToken.ExpiresAt,
             User: new UserResponse(user.Id, user.Username, user.Email)
         );
@@ -215,7 +215,9 @@ public record RegisterDto(
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", 
         ErrorMessage = "Password must contain at least 8 characters with uppercase, lowercase, number, and special character")]
-    string Password
+    string Password,
+    
+    bool RememberMe = false
 );
 
 public record LoginDto(
@@ -223,5 +225,7 @@ public record LoginDto(
     string Username,
     
     [Required(ErrorMessage = "Password is required")]
-    string Password
+    string Password,
+    
+    bool RememberMe = false
 );

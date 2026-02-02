@@ -37,7 +37,7 @@ public class TokenService
             issuer: _jwtIssuer,
             audience: _jwtAudience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(15), // Short-lived access token
+            expires: DateTime.UtcNow.AddHours(4),
             signingCredentials: creds
         );
 
@@ -84,8 +84,10 @@ public class TokenService
         }
     }
 
-    public DateTime GetRefreshTokenExpiration()
+    public DateTime GetRefreshTokenExpiration(bool rememberMe = false)
     {
-        return DateTime.UtcNow.AddDays(3); // 3 days for refresh token
+        return rememberMe 
+            ? DateTime.UtcNow.AddDays(30) 
+            : DateTime.UtcNow.AddDays(2);
     }
 }
