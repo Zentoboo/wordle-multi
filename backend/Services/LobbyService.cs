@@ -30,145 +30,181 @@ public class LobbyService : ILobbyService
 
     public async Task<LobbyDetailDto> CreateLobbyAsync(int userId, CreateLobbyDto dto)
     {
-        var existingLobby = await _context.LobbyPlayers
-            .Include(lp => lp.Lobby)
-            .Where(lp => lp.UserId == userId && lp.ConnectionStatus != PlayerConnectionStatus.Removed)
-            .FirstOrDefaultAsync();
-
-        if (existingLobby != null)
-            throw new InvalidOperationException("You are already in a lobby. Leave your current lobby first.");
-
-        var lobby = new Lobby
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            Name = dto.Name,
-            OwnerId = userId,
-            MaxPlayers = dto.MaxPlayers,
-            NumberOfRounds = dto.NumberOfRounds,
-            RoundTimeSeconds = dto.RoundTimeSeconds,
-            Status = LobbyStatus.Waiting,
-            CreatedAt = DateTime.UtcNow
-        };
+            var existingLobby = await _context.LobbyPlayers
+                .Include(lp => lp.Lobby)
+                .Where(lp => lp.UserId == userId && lp.ConnectionStatus != PlayerConnectionStatus.Removed)
+                .FirstOrDefaultAsync();
 
-        var player = new LobbyPlayer
+            if (existingLobby != null)
+                throw new InvalidOperationException("You are already in a lobby. Leave your current lobby first.");
+
+            var lobby = new Lobby
+            {
+                Name = dto.Name,
+                OwnerId = userId,
+                MaxPlayers = dto.MaxPlayers,
+                NumberOfRounds = dto.NumberOfRounds,
+                RoundTimeSeconds = dto.RoundTimeSeconds,
+                Status = LobbyStatus.Waiting,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var player = new LobbyPlayer
+            {
+                LobbyId = lobby.Id,
+                UserId = userId,
+                JoinOrder = 0,
+                ConnectionStatus = PlayerConnectionStatus.Connected,
+                LastConnectedAt = DateTime.UtcNow
+            };
+
+            _context.Lobbies.Add(lobby);
+            lobby.Players.Add(player);
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            _logger.LogInformation("User {UserId} created lobby {LobbyId}", userId, lobby.Id);
+
+            var lobbyDetail = await GetLobbyDetailAsync(lobby.Id);
+
+            await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
+            await _hubContext.Clients.Group($"lobby_{lobby.Id}").SendAsync("LobbyCreated", lobbyDetail);
+
+            return lobbyDetail;
+        }
+        catch
         {
-            LobbyId = lobby.Id,
-            UserId = userId,
-            JoinOrder = 0,
-            ConnectionStatus = PlayerConnectionStatus.Connected,
-            LastConnectedAt = DateTime.UtcNow
-        };
-
-        _context.Lobbies.Add(lobby);
-        lobby.Players.Add(player);
-        await _context.SaveChangesAsync();
-        
-        _logger.LogInformation("User {UserId} created lobby {LobbyId}", userId, lobby.Id);
-
-        var lobbyDetail = await GetLobbyDetailAsync(lobby.Id);
-        
-        // Broadcast updates
-        await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
-        await _hubContext.Clients.Group($"lobby_{lobby.Id}").SendAsync("LobbyCreated", lobbyDetail);
-        
-        return lobbyDetail;
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<LobbyDetailDto> JoinLobbyAsync(int userId, int lobbyId)
     {
-        var lobby = await _context.Lobbies
-            .Include(l => l.Players)
-            .FirstOrDefaultAsync(l => l.Id == lobbyId);
-
-        if (lobby == null)
-            throw new NotFoundException("Lobby not found");
-
-        if (lobby.Status != LobbyStatus.Waiting)
-            throw new InvalidOperationException("Cannot join a lobby that is already in progress");
-
-        if (lobby.Players.Count >= lobby.MaxPlayers)
-            throw new InvalidOperationException("Lobby is full");
-
-        if (lobby.Players.Any(p => p.UserId == userId))
-            throw new InvalidOperationException("You are already in this lobby");
-
-        var existingLobbyPlayer = await _context.LobbyPlayers
-            .Include(lp => lp.Lobby)
-            .Where(lp => lp.UserId == userId && lp.ConnectionStatus != PlayerConnectionStatus.Removed)
-            .FirstOrDefaultAsync();
-
-        if (existingLobbyPlayer != null)
-            throw new InvalidOperationException("You are already in a lobby. Leave your current lobby first.");
-
-        var player = new LobbyPlayer
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            LobbyId = lobbyId,
-            UserId = userId,
-            JoinOrder = lobby.Players.Count,
-            ConnectionStatus = PlayerConnectionStatus.Connected,
-            LastConnectedAt = DateTime.UtcNow
-        };
+            var lobby = await _context.Lobbies
+                .Include(l => l.Players)
+                .FirstOrDefaultAsync(l => l.Id == lobbyId);
 
-        _context.LobbyPlayers.Add(player);
-        await _context.SaveChangesAsync();
-        
-        _logger.LogInformation("User {UserId} joined lobby {LobbyId}", userId, lobbyId);
+            if (lobby == null)
+                throw new NotFoundException("Lobby not found");
 
-        var lobbyDetail = await GetLobbyDetailAsync(lobbyId);
-        var newPlayer = lobbyDetail.Players.FirstOrDefault(p => p.UserId == userId);
-        
-        // Broadcast updates
-        await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
-        await _hubContext.Clients.Group($"lobby_{lobbyId}").SendAsync("PlayerJoined", newPlayer);
-        
-        return lobbyDetail;
+            if (lobby.Status != LobbyStatus.Waiting)
+                throw new InvalidOperationException("Cannot join a lobby that is already in progress");
+
+            if (lobby.Players.Count >= lobby.MaxPlayers)
+                throw new InvalidOperationException("Lobby is full");
+
+            if (lobby.Players.Any(p => p.UserId == userId))
+                throw new InvalidOperationException("You are already in this lobby");
+
+            var existingLobbyPlayer = await _context.LobbyPlayers
+                .Include(lp => lp.Lobby)
+                .Where(lp => lp.UserId == userId && lp.ConnectionStatus != PlayerConnectionStatus.Removed)
+                .FirstOrDefaultAsync();
+
+            if (existingLobbyPlayer != null)
+                throw new InvalidOperationException("You are already in a lobby. Leave your current lobby first.");
+
+            var joinOrder = await _context.LobbyPlayers
+                .Where(lp => lp.LobbyId == lobbyId)
+                .CountAsync() + 1;
+
+            var player = new LobbyPlayer
+            {
+                LobbyId = lobbyId,
+                UserId = userId,
+                JoinOrder = joinOrder,
+                ConnectionStatus = PlayerConnectionStatus.Connected,
+                LastConnectedAt = DateTime.UtcNow
+            };
+
+            _context.LobbyPlayers.Add(player);
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            _logger.LogInformation("User {UserId} joined lobby {LobbyId}", userId, lobbyId);
+
+            var lobbyDetail = await GetLobbyDetailAsync(lobbyId);
+            var newPlayer = lobbyDetail.Players.FirstOrDefault(p => p.UserId == userId);
+
+            await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
+            await _hubContext.Clients.Group($"lobby_{lobbyId}").SendAsync("PlayerJoined", newPlayer);
+
+            return lobbyDetail;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<LobbyDetailDto?> LeaveLobbyAsync(int userId, int lobbyId)
     {
-        var lobby = await _context.Lobbies
-            .Include(l => l.Players)
-            .FirstOrDefaultAsync(l => l.Id == lobbyId);
-
-        if (lobby == null)
-            throw new NotFoundException("Lobby not found");
-
-        var player = lobby.Players.FirstOrDefault(p => p.UserId == userId);
-        if (player == null)
-            throw new NotFoundException("You are not in this lobby");
-
-        _context.LobbyPlayers.Remove(player);
-        await _context.SaveChangesAsync();
-        
-        if (lobby.OwnerId == userId)
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            await TransferOwnershipAsync(lobby);
-        }
-        
-        if (!lobby.Players.Any())
-        {
-            _context.Lobbies.Remove(lobby);
+            var lobby = await _context.Lobbies
+                .Include(l => l.Players)
+                .FirstOrDefaultAsync(l => l.Id == lobbyId);
+
+            if (lobby == null)
+                throw new NotFoundException("Lobby not found");
+
+            var player = lobby.Players.FirstOrDefault(p => p.UserId == userId);
+            if (player == null)
+                throw new NotFoundException("You are not in this lobby");
+
+            _context.LobbyPlayers.Remove(player);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Lobby {LobbyId} deleted - no players remaining", lobbyId);
-            
-            // Broadcast lobby list update (lobby removed)
+
+            if (lobby.OwnerId == userId)
+            {
+                await TransferOwnershipAsync(lobby);
+            }
+
+            if (!lobby.Players.Any())
+            {
+                _context.Lobbies.Remove(lobby);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("Lobby {LobbyId} deleted - no players remaining", lobbyId);
+
+                await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
+
+                return null;
+            }
+
+            await transaction.CommitAsync();
+
+            _logger.LogInformation("User {UserId} left lobby {LobbyId}", userId, lobbyId);
+
+            var lobbyDetail = await GetLobbyDetailAsync(lobbyId);
+
             await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
-            
-            return null;
-        }
-        
-        _logger.LogInformation("User {UserId} left lobby {LobbyId}", userId, lobbyId);
+            await _hubContext.Clients.Group($"lobby_{lobbyId}").SendAsync("PlayerLeft", userId);
+            if (lobbyDetail != null)
+            {
+                await _hubContext.Clients.Group($"lobby_{lobbyId}").SendAsync("LobbyUpdated", lobbyDetail);
+            }
 
-        var lobbyDetail = await GetLobbyDetailAsync(lobbyId);
-        
-        // Broadcast updates
-        await _hubContext.Clients.All.SendAsync("LobbyListUpdated");
-        await _hubContext.Clients.Group($"lobby_{lobbyId}").SendAsync("PlayerLeft", userId);
-        if (lobbyDetail != null)
+            return lobbyDetail;
+        }
+        catch
         {
-            await _hubContext.Clients.Group($"lobby_{lobbyId}").SendAsync("LobbyUpdated", lobbyDetail);
+            await transaction.RollbackAsync();
+            throw;
         }
-
-        return lobbyDetail;
     }
 
     private async Task TransferOwnershipAsync(Lobby lobby)

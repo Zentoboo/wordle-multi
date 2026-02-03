@@ -31,6 +31,8 @@ public class Lobby
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+    
     public ICollection<LobbyPlayer> Players { get; set; } = new List<LobbyPlayer>();
 }
 
