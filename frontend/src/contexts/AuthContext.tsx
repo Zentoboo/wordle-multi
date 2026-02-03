@@ -1,4 +1,5 @@
-import React, { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { AuthContext } from './AuthContextDefinition';
 import type { AuthContextType, User, LoginCredentials, RegisterData, ValidationError, AuthResponse } from '../types/auth';
 

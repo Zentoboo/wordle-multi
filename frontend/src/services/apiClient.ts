@@ -13,13 +13,17 @@ class ApiClient {
 
   private async request(endpoint: string, options: RequestOptions = {}): Promise<Response> {
     const { skipAuth = false, ...fetchOptions } = options;
-    
+
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
-    
-    const headers: HeadersInit = {
+
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...fetchOptions.headers,
     };
+
+    if (fetchOptions.headers) {
+      const existingHeaders = fetchOptions.headers as Record<string, string>;
+      Object.assign(headers, existingHeaders);
+    }
 
     // Add auth header if not skipped and token is available
     if (!skipAuth) {
@@ -37,7 +41,7 @@ class ApiClient {
     // Handle 401 Unauthorized - try token refresh
     if (response.status === 401 && !skipAuth) {
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       if (refreshToken) {
         try {
           // Attempt to refresh the token
