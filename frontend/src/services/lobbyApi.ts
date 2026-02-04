@@ -10,5 +10,6 @@ export function useLobbyApi() {
         createLobby: (data: CreateLobbyRequest) => post<LobbyDetailDto>('/multiplayer/lobbies', data),
         joinLobby: (lobbyId: number) => post<LobbyDetailDto>(`/multiplayer/lobbies/${lobbyId}/join`),
         leaveLobby: (lobbyId: number) => post(`/multiplayer/lobbies/${lobbyId}/leave`),
+        getUserCurrentLobby: () => get<LobbyDetailDto>('/multiplayer/lobbies/my-lobby'),
     };
 }

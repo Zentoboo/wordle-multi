@@ -343,6 +343,22 @@ public class LobbyService : ILobbyService
         await _context.SaveChangesAsync();
     }
 
+public async Task<LobbyDetailDto?> GetUserCurrentLobbyAsync(int userId)
+    {
+        var lobbyPlayer = await _context.LobbyPlayers
+            .Include(lp => lp.Lobby)
+            .ThenInclude(l => l.Owner)
+            .Include(lp => lp.Lobby.Players)
+            .ThenInclude(p => p.User)
+            .Where(lp => lp.UserId == userId && lp.ConnectionStatus != PlayerConnectionStatus.Removed)
+            .FirstOrDefaultAsync();
+
+        if (lobbyPlayer == null)
+            return null;
+
+        return await GetLobbyDetailAsync(lobbyPlayer.LobbyId);
+    }
+
     public async Task CleanupDisconnectedPlayersAsync()
     {
         var timeout = TimeSpan.FromMinutes(DisconnectTimeoutMinutes);

@@ -2,18 +2,32 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLobbyApi } from '../services/lobbyApi';
 import { useLobbyListSignalR } from '../hooks/useLobbyListSignalR';
+import { useLobbyRedirect } from '../hooks/useLobbyRedirect';
 import type { CreateLobbyRequest } from '../types/multiplayer';
 import CreateLobbyModal from '../components/CreateLobbyModal';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 function LobbyList() {
-  const { createLobby } = useLobbyApi();
+  const { createLobby, joinLobby } = useLobbyApi();
   const navigate = useNavigate();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [joiningLobbyId, setJoiningLobbyId] = useState<number | null>(null);
 
-  const { lobbies, refreshLobbies, connectionState } = useLobbyListSignalR();
+const { lobbies, refreshLobbies, connectionState } = useLobbyListSignalR();
+  const { isChecking } = useLobbyRedirect(true);
+
+  // Show loading while checking for lobby redirect
+  if (isChecking) {
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div>Checking for active lobby...</div>
+        </div>
+      </div>
+    );
+  }
 
   const handleCreateLobby = async (data: CreateLobbyRequest) => {
     try {
@@ -29,8 +43,17 @@ function LobbyList() {
     }
   };
 
-  const handleJoinLobby = (lobbyId: number) => {
-    navigate(`/lobby/${lobbyId}`);
+const handleJoinLobby = async (lobbyId: number) => {
+    try {
+      setJoiningLobbyId(lobbyId);
+      const lobby = await joinLobby(lobbyId);
+      navigate(`/lobby/${lobby.lobby.id}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to join lobby';
+      alert(errorMessage);
+    } finally {
+      setJoiningLobbyId(null);
+    }
   };
 
   return (
@@ -92,12 +115,13 @@ function LobbyList() {
                 </div>
               </div>
 
-              <button
+<button
                 className="play-button"
                 onClick={() => handleJoinLobby(lobby.id)}
-                disabled={lobby.playerCount >= lobby.maxPlayers}
+                disabled={lobby.playerCount >= lobby.maxPlayers || joiningLobbyId === lobby.id}
               >
-                {lobby.playerCount >= lobby.maxPlayers ? 'Full' : 'Join Lobby'}
+                {joiningLobbyId === lobby.id ? 'Joining...' : 
+                 lobby.playerCount >= lobby.maxPlayers ? 'Full' : 'Join Lobby'}
               </button>
             </div>
           ))}

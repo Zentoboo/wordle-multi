@@ -47,7 +47,7 @@ function LobbyDetail() {
     }
   };
 
-  if (!user || !lobbyId) {
+if (!user || !lobbyId) {
     return <div>Loading...</div>;
   }
 
@@ -55,6 +55,18 @@ function LobbyDetail() {
     return (
       <div className="card">
         <h2>Lobby Not Found</h2>
+        <button onClick={() => navigate('/lobby')}>Back to Lobbies</button>
+      </div>
+    );
+  }
+
+  // Check if current user is actually in this lobby
+  const currentUserInLobby = lobby.players.some(player => player.userId === user.id);
+  if (!currentUserInLobby) {
+    return (
+      <div className="card">
+        <h2>Access Denied</h2>
+        <p>You are not a member of this lobby. Please join from the lobby list first.</p>
         <button onClick={() => navigate('/lobby')}>Back to Lobbies</button>
       </div>
     );
@@ -131,9 +143,9 @@ function LobbyDetail() {
                 <div>No players in lobby yet</div>
               ) : (
                 <div className="player-list">
-                  {lobby.players
-                    .sort((a: any, b: any) => a.joinOrder - b.joinOrder)
-                    .map((player: any) => (
+{lobby.players
+                    .sort((a, b) => a.joinOrder - b.joinOrder)
+                    .map((player) => (
                       <div key={player.userId} className="player-item">
                         <div className="player-info">
                           <span className="player-name">{player.username}</span>

@@ -114,7 +114,7 @@ public class MultiplayerController : ControllerBase
         }
     }
 
-    [HttpPost("lobbies/{lobbyId}/leave")]
+[HttpPost("lobbies/{lobbyId}/leave")]
     public async Task<ActionResult<LobbyDetailDto?>> LeaveLobby(int lobbyId)
     {
         try
@@ -135,6 +135,26 @@ public class MultiplayerController : ControllerBase
         {
             _logger.LogError(ex, "Error leaving lobby {LobbyId} for user {UserId}", lobbyId, CurrentUserId);
             return StatusCode(500, "An error occurred while leaving the lobby");
+        }
+    }
+
+    [HttpGet("lobbies/my-lobby")]
+    public async Task<ActionResult<LobbyDetailDto>> GetUserLobby()
+    {
+        try
+        {
+            var userId = CurrentUserId;
+            var lobby = await _lobbyService.GetUserCurrentLobbyAsync(userId);
+            
+            if (lobby == null)
+                return NotFound("You are not currently in any lobby");
+                
+            return Ok(lobby);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user's current lobby");
+            return StatusCode(500, "An error occurred while fetching your lobby");
         }
     }
 }
