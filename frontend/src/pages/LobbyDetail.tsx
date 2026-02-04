@@ -72,15 +72,16 @@ function LobbyDetail() {
             backgroundColor: connectionState === 'connected' ? '#538d4e' :
               connectionState === 'connecting' ? '#b59f3b' : '#e74c3c'
           }}>
-            {connectionState === 'connected' ? '● Connected' :
-              connectionState === 'connecting' ? '○ Connecting...' :
-              connectionState === 'error' ? '● Error' : '● Disconnected'}
+            {connectionState === 'connected' ? 'Connected' :
+              connectionState === 'connecting' ? 'Connecting...' :
+              connectionState === 'error' ? 'Error' : 'Disconnected'}
           </div>
         </div>
         <button
           onClick={handleLeaveLobby}
           className="leave-button"
           disabled={connectionState !== 'connected' || isLeaving}
+          style={{width: '32%'}}
         >
           {isLeaving ? 'Leaving...' : 'Leave Lobby'}
         </button>
@@ -142,7 +143,7 @@ function LobbyDetail() {
                         </div>
                         <div>
                           <div className={`player-status ${player.connectionStatus === 0 ? 'status-connected' : 'status-disconnected'}`}>
-                            {player.connectionStatus === 0 ? '● Connected' : '○ Disconnected'}
+                            {player.connectionStatus === 0 ? 'Connected' : 'Disconnected'}
                           </div>
                         </div>
                       </div>

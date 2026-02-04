@@ -8,18 +8,18 @@ export default function Header() {
 
     const getConnectionIndicator = () => {
         const stateStyles = {
-            connected: { backgroundColor: '#538d4e', text: '● Live' },
-            connecting: { backgroundColor: '#b59f3b', text: '○ Connecting...' },
-            reconnecting: { backgroundColor: '#b59f3b', text: '○ Reconnecting...' },
-            error: { backgroundColor: '#e74c3c', text: '● Error' },
-            disconnected: { backgroundColor: '#e74c3c', text: '○ Offline' }
+            connected: { backgroundColor: '#538d4e', text: 'Live' },
+            connecting: { backgroundColor: '#b59f3b', text: 'Connecting...' },
+            reconnecting: { backgroundColor: '#b59f3b', text: 'Reconnecting...' },
+            error: { backgroundColor: '#e74c3c', text: 'Error' },
+            disconnected: { backgroundColor: '#e74c3c', text: 'Offline' }
         };
 
         const style = stateStyles[connectionState];
         return (
             <div style={{
-                fontSize: '0.75rem',
-                padding: '0.25rem 0.5rem',
+                fontSize: '0.8rem',
+                padding: '0.4rem 0.8rem',
                 borderRadius: '4px',
                 backgroundColor: style.backgroundColor,
                 color: 'white',
